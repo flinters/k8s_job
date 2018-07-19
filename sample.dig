@@ -1,0 +1,10 @@
+_export:
+  plugin:
+    repositories:
+      - https://jitpack.io
+    dependencies:
+      - jp.co.septeni_original:k8sop_2.12:0.1-SNAPSHOT
+
++sample:
+  k8s_job>: sample_job.yaml
+  timeout: 3600
