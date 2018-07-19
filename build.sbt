@@ -4,7 +4,10 @@ organization := "jp.co.septeni_original"
 
 version := "0.1-SNAPSHOT"
 
-resolvers += "jitpack" at "https://jitpack.io"
+resolvers ++= Seq(
+  Resolver.bintrayRepo("digdag", "maven"),
+  "jitpack" at "https://jitpack.io"
+)
 
 def digdagVersion = "0.9.27"
 

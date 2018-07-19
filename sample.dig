@@ -3,7 +3,7 @@ _export:
     repositories:
       - https://jitpack.io
     dependencies:
-      - jp.co.septeni_original:k8sop_2.12:0.1-SNAPSHOT
+      - com.github.septeni-original:k8s_job_2.12:ee25e12f62
 
 +sample:
   k8s_job>: sample_job.yaml
