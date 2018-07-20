@@ -1,9 +1,9 @@
 _export:
   plugin:
     repositories:
-    - file:///Users/t_takashima/.m2/repository/
+    - https://jitpack.io
     dependencies:
-    - jp.co.septeni_original:k8sop_2.12:0.1-SNAPSHOT
+    - com.github.septeni-original:k8s_job_2.12:f249600d9659f9d5d1d8de548b103815b4627fc8
 
 +sample:
   k8s_job>: sample_job.yaml
