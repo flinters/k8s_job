@@ -12,7 +12,6 @@ resolvers ++= Seq(
 def digdagVersion = "0.9.27"
 
 libraryDependencies ++= Seq(
-  "io.sentry"                  % "sentry-logback"  % "1.7.5",
   "com.typesafe.scala-logging" %% "scala-logging"  % "3.9.0",
   "org.slf4j"                  % "slf4j-api"       % "1.7.25",
   "ch.qos.logback"             % "logback-classic" % "1.2.3" % Provided,
