@@ -10,14 +10,14 @@ import io.kubernetes.client.Configuration
 import io.kubernetes.client.models._
 import io.kubernetes.client.util.authenticators.GCPAuthenticator
 import io.kubernetes.client.util.{Config, KubeConfig, Yaml}
-import jp.co.septeni_original.k8sop.util.FutureOps
+import jp.co.septeni_original.k8sop.util.{FileReader, FutureOps}
 
 import scala.collection.JavaConverters._
 import scala.concurrent.duration._
 import scala.concurrent.{Await, ExecutionContext, Future}
 
 class CreateJobOperatorFactory(val templateEngine: TemplateEngine) extends OperatorFactory {
-  override def getType = CreateJobOperator.JOB_NAME
+  override def getType: String = CreateJobOperator.JOB_NAME
 
   override def newOperator(context: OperatorContext) =
     new CreateJobOperator(context, templateEngine)
@@ -51,13 +51,19 @@ private[k8sop] class CreateJobOperator private[k8sop] (val _context: OperatorCon
 
     val templateYaml = workspace.templateCommand(templateEngine, config, CreateJobOperator.JOB_NAME, UTF_8)
     val timeout      = config.get("timeout", classOf[Int])
-    val cmDirNames   = config.getListOrEmpty("cmdir", classOf[String]).asScala
+    val cmDirNames   = config.getListOrEmpty("cmdir", classOf[String]).asScala.toList
 
     val cm = new ConfigMapClient(client)
     val j  = new JobClient(client)
 
-    val cmFromDir = cmDirNames.map(cm.createFrom)
-    val yamls     = Yaml.loadAll(templateYaml).asScala.toList ++ cmFromDir
+    val cmFromDir = cmDirNames
+      .map(FileReader.directoryToMap)
+      .map { m =>
+        val r = m.mapValues(v => templateEngine.template(v, config))
+        r
+      }
+      .map(cm.createFrom)
+    val yamls = Yaml.loadAll(templateYaml).asScala.toList ++ cmFromDir
 
     val f: Future[Seq[V1Job]] = for {
       _          <- cm.delete(yamls)

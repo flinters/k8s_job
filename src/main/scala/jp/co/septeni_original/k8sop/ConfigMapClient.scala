@@ -1,16 +1,11 @@
 package jp.co.septeni_original.k8sop
 
-import java.io.File
-import java.nio.file.Paths
-
-import com.nimbusds.jose.util.StandardCharset
 import com.typesafe.scalalogging.LazyLogging
 import io.kubernetes.client.apis.CoreV1Api
 import io.kubernetes.client.models.{V1ConfigMap, V1DeleteOptions}
 import io.kubernetes.client.util.Yaml
 import io.kubernetes.client.{ApiClient, ApiException}
 import jp.co.septeni_original.k8sop.util.FutureOps
-import org.apache.commons.io.FileUtils
 
 import scala.collection.JavaConverters._
 import scala.concurrent.{ExecutionContext, Future}
@@ -24,28 +19,15 @@ class ConfigMapClient(val client: ApiClient)(implicit ec: ExecutionContext) exte
   private def ols2cmls(objects: List[Object]) =
     objects.filter(_.isInstanceOf[V1ConfigMap]).map(_.asInstanceOf[V1ConfigMap]) // collect
 
-  def createFrom(directoryName: String) = {
-    val directory = Paths.get(directoryName).toFile
-    require(directory.isDirectory, s"$directory isn't Directory.")
-    logger.debug(s"directory found. ${directory.getAbsolutePath}")
-
-    val files: List[File] = directory.listFiles().toList
-    val baseYaml =
-      files.find(_.getName == "base.yaml").getOrElse(throw new IllegalArgumentException("base.yaml not found"))
+  def createFrom(map: Map[String, String]): V1ConfigMap = {
+    val baseYaml = map.getOrElse("base.yaml", throw new IllegalArgumentException("base.yaml not found"))
 
     val baseCM = Yaml.loadAs(baseYaml, classOf[V1ConfigMap])
     logger.debug(s"base ConfigMap: $baseCM")
 
-    val dataFromFiles: Map[String, String] = files
-      .filter(_.getName != "base.yaml")
-      .filter(_.isFile)
-      .map { f =>
-        (f.getName, FileUtils.readFileToString(f, StandardCharset.UTF_8))
-      }
-      .toMap
-
-    val newData: Map[String, String] = Option(baseCM.getData).map(_.asScala.toMap)
-      .getOrElse(Map[String, String]()) ++ dataFromFiles
+    val newData: Map[String, String] = Option(baseCM.getData)
+      .map(_.asScala.toMap)
+      .getOrElse(Map[String, String]()) ++ map.filter(_._1 != "base.yaml")
     baseCM.setData(newData.asJava)
     baseCM
   }

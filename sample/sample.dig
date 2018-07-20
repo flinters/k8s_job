@@ -1,4 +1,5 @@
 _export:
+  SAMPLE_CONFIG: sample_value
   plugin:
     repositories:
     - https://jitpack.io
