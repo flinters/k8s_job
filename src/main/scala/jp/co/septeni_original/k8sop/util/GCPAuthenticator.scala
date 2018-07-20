@@ -6,7 +6,7 @@ import com.typesafe.scalalogging.LazyLogging
 
 import scala.concurrent.duration._
 import scala.sys.process._
-import scala.util.{Success, Try}
+import scala.util.Try
 
 // 以下の問題が解決されると不要になるが、その時まではkubectlを通して解決する.
 // https://github.com/kubernetes-client/java/issues/290

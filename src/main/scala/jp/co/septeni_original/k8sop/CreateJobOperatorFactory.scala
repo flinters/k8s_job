@@ -51,13 +51,14 @@ private[k8sop] class CreateJobOperator private[k8sop] (val _context: OperatorCon
 
     val templateYaml = workspace.templateCommand(templateEngine, config, CreateJobOperator.JOB_NAME, UTF_8)
     val timeout      = config.get("timeout", classOf[Int])
+    val cmDirNames   = config.getListOrEmpty("cmdir", classOf[String]).asScala
 
     val cm = new ConfigMapClient(client)
     val j  = new JobClient(client)
 
-    val yamls = Yaml.loadAll(templateYaml).asScala.toList
-    yamls.foreach(y => logger.debug(y.toString))
-    yamls.foreach(y => logger.debug(y.getClass.getName))
+    val cmFromDir = cmDirNames.map(cm.createFrom)
+    val yamls     = Yaml.loadAll(templateYaml).asScala.toList ++ cmFromDir
+
     val f: Future[Seq[V1Job]] = for {
       _          <- cm.delete(yamls)
       _          <- cm.create(yamls)
