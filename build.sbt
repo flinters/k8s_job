@@ -18,9 +18,8 @@ scalacOptions ++= Seq(
 libraryDependencies ++= Seq(
   "com.typesafe.scala-logging" %% "scala-logging"  % "3.9.0",
   "org.slf4j"                  % "slf4j-api"       % "1.7.25",
+  "commons-io"                 % "commons-io"      % "2.5",
   "ch.qos.logback"             % "logback-classic" % "1.2.3" % Provided,
-  //provide by jboss libraries.
-  "commons-io" % "commons-io" % "2.5" % Provided,
   // 以下のPRがリリースされるまではYamlクラスが正常に動作しないので、maven cenralではなくjitpackから読む。
   // https://github.com/kubernetes-client/java/pull/314
   //  "io.kubernetes"              % "client-java"     % "2.0.0",
@@ -30,6 +29,7 @@ libraryDependencies ++= Seq(
   "io.digdag" % "digdag-plugin-utils" % digdagVersion % Provided,
   // avoid this issue (https://stackoverflow.com/questions/23701209/sbt-0-13-2-m3-to-0-13-5-rc3-issue)
   // copied from https://github.com/resteasy/Resteasy/blob/3.0/resteasy-dependencies-bom/pom.xml
+  "commons-io"                      % "commons-io"                     % "2.5"         % Provided,
   "org.jboss.spec.javax.ws.rs"      % "jboss-jaxrs-api_2.0_spec"       % "1.0.0.Final" % Provided,
   "junit"                           % "junit"                          % "4.12"        % Provided,
   "javax.activation"                % "activation"                     % "1.1.1"       % Provided,

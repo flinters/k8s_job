@@ -1,5 +1,6 @@
 package jp.co.septeni_original.k8sop
 
+import com.squareup.okhttp.Response
 import com.typesafe.scalalogging.LazyLogging
 import io.kubernetes.client.apis.CoreV1Api
 import io.kubernetes.client.models.{V1ConfigMap, V1DeleteOptions}
@@ -15,6 +16,7 @@ class ConfigMapClient(val client: ApiClient)(implicit ec: ExecutionContext) exte
 
   val defaultDeleteOptions = new V1DeleteOptions
   defaultDeleteOptions.setGracePeriodSeconds(0L)
+  defaultDeleteOptions.setOrphanDependents(false)
 
   private def ols2cmls(objects: List[Object]) =
     objects.filter(_.isInstanceOf[V1ConfigMap]).map(_.asInstanceOf[V1ConfigMap]) // collect
@@ -36,11 +38,9 @@ class ConfigMapClient(val client: ApiClient)(implicit ec: ExecutionContext) exte
     val cmF = ols2cmls(objects).map { (cm: V1ConfigMap) =>
       logger.debug(s"ConfigMap create start. cm: $cm")
       FutureOps.retryWithRefresh {
-        Future {
-          val res = api.createNamespacedConfigMap(cm.getMetadata.getNamespace, cm, "false")
-          logger.debug(s"ConfigMap create complete.")
-          res
-        }
+        val res = api.createNamespacedConfigMap(cm.getMetadata.getNamespace, cm, "false")
+        logger.debug(s"ConfigMap create complete.")
+        res
       }
     }
     Future.sequence(cmF)
@@ -53,8 +53,9 @@ class ConfigMapClient(val client: ApiClient)(implicit ec: ExecutionContext) exte
     val cmF = ols2cmls(objects).map { cm =>
       logger.debug(s"ConfigMap delete start. cm: $cm")
       FutureOps.retryWithRefresh {
-        Future {
-          api
+        var res: Response = null
+        try {
+          res = api
             .deleteNamespacedConfigMapCall(cm.getMetadata.getName,
                                            cm.getMetadata.getNamespace,
                                            deleteOption,
@@ -65,11 +66,13 @@ class ConfigMapClient(val client: ApiClient)(implicit ec: ExecutionContext) exte
                                            null,
                                            null)
             .execute()
-          logger.debug(s"ConfigMap delete complete.")
-          ()
-        } recover {
-          case notFound: ApiException if notFound.getCode == 404 => ()
+        } catch {
+          case ae: ApiException if ae.getCode == 404 => ()
+          case th: Throwable                         => throw th
+        } finally {
+          Option(res).map(_.body).foreach(_.close)
         }
+        logger.debug(s"Job delete complete.")
       }
     }
     Future.sequence(cmF)
