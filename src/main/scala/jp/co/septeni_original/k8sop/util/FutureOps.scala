@@ -23,12 +23,12 @@ object FutureOps extends LazyLogging {
     }
   }
 
-  def retryWithRefresh[T](f: => Future[T], maxRetryCount: Int = 3)(implicit ec: ExecutionContext): Future[T] = {
+  def retryWithRefresh[T](f: => T, maxRetryCount: Int = 3)(implicit ec: ExecutionContext): Future[T] = {
     def refresh(t: Throwable) = t match {
       case _: IllegalStateException => Future.fromTry(GCPAuthenticator.refresh)
       case _                        => Future.successful(())
     }
-    retryWith(f, refresh, maxRetryCount)
+    retryWith(Future(f), refresh, maxRetryCount)
   }
 
 }

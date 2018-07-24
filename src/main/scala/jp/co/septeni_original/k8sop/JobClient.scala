@@ -1,5 +1,6 @@
 package jp.co.septeni_original.k8sop
 
+import com.squareup.okhttp.Response
 import com.typesafe.scalalogging.LazyLogging
 import io.kubernetes.client.apis.BatchV1Api
 import io.kubernetes.client.models.{V1DeleteOptions, V1Job}
@@ -14,6 +15,7 @@ class JobClient(val client: ApiClient)(implicit ec: ExecutionContext) extends La
 
   val defaultDeleteOptions = new V1DeleteOptions
   defaultDeleteOptions.setGracePeriodSeconds(0L)
+  defaultDeleteOptions.setOrphanDependents(false)
 
   private def ols2jls(objects: List[Object]) =
     objects.filter(_.isInstanceOf[V1Job]).map(_.asInstanceOf[V1Job])
@@ -22,12 +24,10 @@ class JobClient(val client: ApiClient)(implicit ec: ExecutionContext) extends La
     val jobsF =
       ols2jls(objects).map { j =>
         FutureOps.retryWithRefresh {
-          Future {
-            logger.debug(s"Job create start. $j")
-            val res = api.createNamespacedJob(j.getMetadata.getNamespace, j, "false")
-            logger.debug(s"Job create complete.")
-            res
-          }
+          logger.debug(s"Job create start. $j")
+          val res = api.createNamespacedJob(j.getMetadata.getNamespace, j, "false")
+          logger.debug(s"Job create complete.")
+          res
         }
       }
 
@@ -35,25 +35,23 @@ class JobClient(val client: ApiClient)(implicit ec: ExecutionContext) extends La
   }
 
   def wait(job: List[V1Job]): Future[Seq[V1Job]] = {
-    def exists(job: V1Job) = Option(job.getStatus).isDefined
+    def exists(job: V1Job)       = Option(job.getStatus).isDefined
     def isInComplete(job: V1Job) = Option(job.getStatus).flatMap(j => Option(j.getConditions)).isEmpty
 
     val f = job.map { j =>
       FutureOps.retryWithRefresh {
-        Future {
-          var waiting = j
-          do {
-            Thread.sleep(10.seconds.toMillis)
-            waiting = api
-              .readNamespacedJob(waiting.getMetadata.getName, waiting.getMetadata.getNamespace, "false", null, null)
-            logger.debug(s"Job complete waiting. $j")
-          } while (exists(waiting) && isInComplete(waiting))
+        var waiting = j
+        do {
+          Thread.sleep(10.seconds.toMillis)
+          waiting = api
+            .readNamespacedJob(waiting.getMetadata.getName, waiting.getMetadata.getNamespace, "false", null, null)
+          logger.debug(s"Job complete waiting. $j")
+        } while (exists(waiting) && isInComplete(waiting))
 
-          if (!exists(waiting)) throw new RuntimeException("job not found.")
+        if (!exists(waiting)) throw new RuntimeException("job not found.")
 
-          logger.debug(s"Job complete.")
-          waiting
-        }
+        logger.debug(s"Job complete.")
+        waiting
       }
     }
 
@@ -66,9 +64,11 @@ class JobClient(val client: ApiClient)(implicit ec: ExecutionContext) extends La
   def delete(objects: List[Object], deleteOption: V1DeleteOptions = defaultDeleteOptions): Future[Seq[Unit]] = {
     val jobF: Seq[Future[Unit]] = ols2jls(objects).map { j =>
       FutureOps.retryWithRefresh {
-        Future {
-          logger.debug(s"Job delete start. $j")
-          api
+        logger.debug(s"Job delete start. $j")
+
+        var res: Response = null
+        try {
+          res = api
             .deleteNamespacedJobCall(j.getMetadata.getName,
                                      j.getMetadata.getNamespace,
                                      deleteOption,
@@ -79,11 +79,14 @@ class JobClient(val client: ApiClient)(implicit ec: ExecutionContext) extends La
                                      null,
                                      null)
             .execute()
-          logger.debug(s"Job delete complete.")
-          ()
-        } recover {
-          case notFound: ApiException if notFound.getCode == 404 => ()
+        } catch {
+          case ae: ApiException if ae.getCode == 404 => ()
+          case th: Throwable                         => throw th
+        } finally {
+          Option(res).map(_.body).foreach(_.close)
         }
+        logger.debug(s"Job delete complete.")
+        ()
       }
     }
     Future.sequence(jobF)

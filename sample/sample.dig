@@ -4,9 +4,11 @@ _export:
     repositories:
     - https://jitpack.io
     dependencies:
-    - com.github.septeni-original:k8s_job_2.12:1d2769ce313e79c479f62e1299155a236cef8d69
+    - com.github.septeni-original:k8s_job_2.12:81c9fcf21e3764dc35693887c11e7ac0125037bc
 
 +sample:
   k8s_job>: sample_job.yaml
   timeout: 3600
-  cmdir: [./cmdir1, ./cmdir2]
+  cmdir:
+  - cmdir1
+  - cmdir2

@@ -36,13 +36,11 @@ private[k8sop] class CreateJobOperator private[k8sop] (val _context: OperatorCon
   implicit val ec: ExecutionContext = ExecutionContext.fromExecutorService(es)
 
   override def runTask: TaskResult = {
-    logger.debug(s"${CreateJobOperator.JOB_NAME} start.")
+    logger.info(s"${CreateJobOperator.JOB_NAME} start.")
 
     KubeConfig.registerAuthenticator(new GCPAuthenticator)
-    val clientF = FutureOps.retryWithRefresh {
-      Future(Config.defaultClient)
-    }
-    val client = Await.result(clientF, Duration.Inf)
+    val clientF = FutureOps.retryWithRefresh(Config.defaultClient)
+    val client  = Await.result(clientF, Duration.Inf)
     Configuration.setDefaultApiClient(client)
 
     val config = request.getConfig.mergeDefault(request.getConfig.getNestedOrGetEmpty(CreateJobOperator.JOB_NAME))
@@ -56,14 +54,16 @@ private[k8sop] class CreateJobOperator private[k8sop] (val _context: OperatorCon
     val cm = new ConfigMapClient(client)
     val j  = new JobClient(client)
 
+    logger.info(s"comfig map loading from directoryes. $cmDirNames")
     val cmFromDir = cmDirNames
+      .map(workspace.getPath)
+      .map(_.toFile)
       .map(FileReader.directoryToMap)
-      .map { m =>
-        val r = m.mapValues(v => templateEngine.template(v, config))
-        r
-      }
+      .map { _.mapValues(v => templateEngine.template(v, config)) }
       .map(cm.createFrom)
     val yamls = Yaml.loadAll(templateYaml).asScala.toList ++ cmFromDir
+
+    logger.info("resource create start.")
 
     val f: Future[Seq[V1Job]] = for {
       _          <- cm.delete(yamls)
