@@ -19,6 +19,7 @@ libraryDependencies ++= Seq(
   "com.typesafe.scala-logging" %% "scala-logging"  % "3.9.0",
   "org.slf4j"                  % "slf4j-api"       % "1.7.25",
   "commons-io"                 % "commons-io"      % "2.5",
+  "com.softwaremill.retry"     %% "retry"          % "0.3.0",
   "ch.qos.logback"             % "logback-classic" % "1.2.3" % Provided,
   // 以下のPRがリリースされるまではYamlクラスが正常に動作しないので、maven cenralではなくjitpackから読む。
   // https://github.com/kubernetes-client/java/pull/314

@@ -6,11 +6,12 @@ import java.util.concurrent.Executors
 import com.typesafe.scalalogging.LazyLogging
 import io.digdag.spi._
 import io.digdag.util.BaseOperator
-import io.kubernetes.client.Configuration
+import io.kubernetes.client.{ApiClient, Configuration}
 import io.kubernetes.client.models._
 import io.kubernetes.client.util.authenticators.GCPAuthenticator
 import io.kubernetes.client.util.{Config, KubeConfig, Yaml}
-import jp.co.septeni_original.k8sop.util.{FileReader, FutureOps}
+import jp.co.septeni_original.k8sop.util.{FileReader, RetryOps}
+import retry.Success
 
 import scala.collection.JavaConverters._
 import scala.concurrent.duration._
@@ -35,12 +36,14 @@ private[k8sop] class CreateJobOperator private[k8sop] (val _context: OperatorCon
   val es                            = Executors.newFixedThreadPool(30)
   implicit val ec: ExecutionContext = ExecutionContext.fromExecutorService(es)
 
+  implicit val apiClientSccess = Success[ApiClient](_ => true)
+
   override def runTask: TaskResult = {
     logger.info(s"${CreateJobOperator.JOB_NAME} start.")
 
     KubeConfig.registerAuthenticator(new GCPAuthenticator)
-    val clientF = FutureOps.retryWithRefresh(Config.defaultClient)
-    val client  = Await.result(clientF, Duration.Inf)
+    val clientF = RetryOps.retryWithRefresh(f = Future(Config.defaultClient))
+    val client  = Await.result(clientF, 10.seconds  )
     Configuration.setDefaultApiClient(client)
 
     val config = request.getConfig.mergeDefault(request.getConfig.getNestedOrGetEmpty(CreateJobOperator.JOB_NAME))
