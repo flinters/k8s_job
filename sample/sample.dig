@@ -4,7 +4,7 @@ _export:
     repositories:
     - https://jitpack.io
     dependencies:
-    - com.github.septeni-original:k8s_job_2.12:81c9fcf21e3764dc35693887c11e7ac0125037bc
+    - com.github.septeni-original:k8s_job_2.12:9a4b9b8058c872e2d1ca788d901651debf7f9853
 
 +sample:
   _parallel: true
