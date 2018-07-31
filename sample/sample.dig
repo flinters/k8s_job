@@ -7,8 +7,15 @@ _export:
     - com.github.septeni-original:k8s_job_2.12:81c9fcf21e3764dc35693887c11e7ac0125037bc
 
 +sample:
-  k8s_job>: sample_job.yaml
-  timeout: 3600
-  cmdir:
-  - cmdir1
-  - cmdir2
+  _parallel: true
+  for_each>:
+    NUM:
+    - 500
+    - 2000
+    - 5000
+  _do:
+    k8s_job>: sample_job.yaml
+    timeout: 3600
+    cmdir:
+    - cmdir1
+    - cmdir2

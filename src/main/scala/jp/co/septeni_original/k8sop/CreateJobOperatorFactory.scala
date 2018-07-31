@@ -32,7 +32,7 @@ private[k8sop] class CreateJobOperator private[k8sop] (val _context: OperatorCon
     extends BaseOperator(_context)
     with LazyLogging {
 
-  val es                            = Executors.newCachedThreadPool
+  val es                            = Executors.newFixedThreadPool(30)
   implicit val ec: ExecutionContext = ExecutionContext.fromExecutorService(es)
 
   override def runTask: TaskResult = {
@@ -59,7 +59,9 @@ private[k8sop] class CreateJobOperator private[k8sop] (val _context: OperatorCon
       .map(workspace.getPath)
       .map(_.toFile)
       .map(FileReader.directoryToMap)
-      .map { _.mapValues(v => templateEngine.template(v, config)) }
+      .map {
+        _.mapValues(v => templateEngine.template(v, config))
+      }
       .map(cm.createFrom)
     val yamls = Yaml.loadAll(templateYaml).asScala.toList ++ cmFromDir
 

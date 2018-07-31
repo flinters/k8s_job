@@ -35,7 +35,6 @@ class JobClient(val client: ApiClient)(implicit ec: ExecutionContext) extends La
   }
 
   def wait(job: List[V1Job]): Future[Seq[V1Job]] = {
-    def exists(job: V1Job)       = Option(job.getStatus).isDefined
     def isInComplete(job: V1Job) = Option(job.getStatus).flatMap(j => Option(j.getConditions)).isEmpty
 
     val f = job.map { j =>
@@ -46,9 +45,7 @@ class JobClient(val client: ApiClient)(implicit ec: ExecutionContext) extends La
           waiting = api
             .readNamespacedJob(waiting.getMetadata.getName, waiting.getMetadata.getNamespace, "false", null, null)
           logger.debug(s"Job complete waiting. $j")
-        } while (exists(waiting) && isInComplete(waiting))
-
-        if (!exists(waiting)) throw new RuntimeException("job not found.")
+        } while (isInComplete(waiting))
 
         logger.debug(s"Job complete.")
         waiting
