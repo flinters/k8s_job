@@ -15,6 +15,7 @@ import jp.co.septeni_original.k8sop.util.{FileReader, FutureOps}
 import scala.collection.JavaConverters._
 import scala.concurrent.duration._
 import scala.concurrent.{Await, ExecutionContext, Future}
+import scala.util.control.NonFatal
 
 class CreateJobOperatorFactory(val templateEngine: TemplateEngine) extends OperatorFactory {
   override def getType: String = CreateJobOperator.JOB_NAME
@@ -35,7 +36,7 @@ private[k8sop] class CreateJobOperator private[k8sop] (val _context: OperatorCon
   val es                            = Executors.newFixedThreadPool(30)
   implicit val ec: ExecutionContext = ExecutionContext.fromExecutorService(es)
 
-  override def runTask: TaskResult = {
+  override def runTask: TaskResult = try {
     logger.info(s"${CreateJobOperator.JOB_NAME} start.")
 
     KubeConfig.registerAuthenticator(new GCPAuthenticator)
@@ -54,7 +55,7 @@ private[k8sop] class CreateJobOperator private[k8sop] (val _context: OperatorCon
     val cm = new ConfigMapClient(client)
     val j  = new JobClient(client)
 
-    logger.info(s"comfig map loading from directoryes. $cmDirNames")
+    logger.info(s"config map loading from directoryes. $cmDirNames")
     val cmFromDir = cmDirNames
       .map(workspace.getPath)
       .map(_.toFile)
@@ -89,6 +90,10 @@ private[k8sop] class CreateJobOperator private[k8sop] (val _context: OperatorCon
       logger.error(results.toString())
       throw new RuntimeException("job failed.")
     }
+  } catch {
+    case NonFatal(e) =>
+      logger.error("unexpected error occurred.", e)
+      throw new TaskExecutionException(e)
   }
 
 }
