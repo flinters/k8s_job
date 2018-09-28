@@ -6,7 +6,7 @@ import java.util.concurrent.Executors
 import com.typesafe.scalalogging.LazyLogging
 import io.digdag.spi._
 import io.digdag.util.BaseOperator
-import io.kubernetes.client.Configuration
+import io.kubernetes.client.{ApiException, Configuration}
 import io.kubernetes.client.models._
 import io.kubernetes.client.util.authenticators.GCPAuthenticator
 import io.kubernetes.client.util.{Config, KubeConfig, Yaml}
@@ -91,6 +91,10 @@ private[k8sop] class CreateJobOperator private[k8sop] (val _context: OperatorCon
       throw new RuntimeException("job failed.")
     }
   } catch {
+    case e: ApiException =>
+      logger.error(s"k8s API response: ${e.getResponseBody}", e)
+      throw new TaskExecutionException(e)
+
     case NonFatal(e) =>
       logger.error("unexpected error occurred.", e)
       throw new TaskExecutionException(e)
