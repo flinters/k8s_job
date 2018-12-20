@@ -20,10 +20,7 @@ libraryDependencies ++= Seq(
   "org.slf4j"                  % "slf4j-api"       % "1.7.25",
   "commons-io"                 % "commons-io"      % "2.5",
   "ch.qos.logback"             % "logback-classic" % "1.2.3" % Provided,
-  // 以下のPRがリリースされるまではYamlクラスが正常に動作しないので、maven cenralではなくjitpackから読む。
-  // https://github.com/kubernetes-client/java/pull/314
-  //  "io.kubernetes"              % "client-java"     % "2.0.0",
-  "com.github.kubernetes-client.java" % "client-java" % "9e23b710f1bf024ca691b3617cd20dc4dc2933e1",
+  "io.kubernetes"              % "client-java"     % "3.0.0",
   // provide by digdag-server or client.
   "io.digdag" % "digdag-spi"          % digdagVersion % Provided,
   "io.digdag" % "digdag-plugin-utils" % digdagVersion % Provided,

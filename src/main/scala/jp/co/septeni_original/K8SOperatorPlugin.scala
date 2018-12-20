@@ -5,7 +5,6 @@ import java.util.{List => JList}
 
 import io.digdag.spi.{OperatorFactory, OperatorProvider, Plugin, TemplateEngine}
 import javax.inject.Inject
-import jp.co.septeni_original.k8sop.CreateJobOperatorFactory
 
 object K8SOperatorPlugin {
 
