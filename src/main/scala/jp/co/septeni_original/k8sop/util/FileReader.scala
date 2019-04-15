@@ -1,8 +1,8 @@
 package jp.co.septeni_original.k8sop.util
 
 import java.io.File
+import java.nio.charset.StandardCharsets
 
-import com.nimbusds.jose.util.StandardCharset
 import com.typesafe.scalalogging.LazyLogging
 import org.apache.commons.io.FileUtils
 
@@ -21,7 +21,7 @@ object FileReader extends LazyLogging {
       .toList
       .filter(_.isFile)
       .map { f =>
-        (f.getName, FileUtils.readFileToString(f, StandardCharset.UTF_8))
+        (f.getName, FileUtils.readFileToString(f, StandardCharsets.UTF_8))
       }
       .toMap
   }
