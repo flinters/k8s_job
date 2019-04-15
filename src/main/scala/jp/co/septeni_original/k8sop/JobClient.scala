@@ -25,7 +25,7 @@ class JobClient(val client: ApiClient)(implicit ec: ExecutionContext) extends La
       ols2jls(objects).map { j =>
         FutureOps.retryWithRefresh {
           logger.debug(s"Job create start. $j")
-          val res = api.createNamespacedJob(j.getMetadata.getNamespace, j, "false")
+          val res = api.createNamespacedJob(j.getMetadata.getNamespace, j, false, "false", null)
           logger.debug(s"Job create complete.")
           res
         }
@@ -70,6 +70,7 @@ class JobClient(val client: ApiClient)(implicit ec: ExecutionContext) extends La
                                      j.getMetadata.getNamespace,
                                      deleteOption,
                                      "false",
+                                     null,
                                      null,
                                      null,
                                      null,

@@ -38,7 +38,7 @@ class ConfigMapClient(val client: ApiClient)(implicit ec: ExecutionContext) exte
     val cmF = ols2cmls(objects).map { (cm: V1ConfigMap) =>
       logger.debug(s"ConfigMap create start. cm: $cm")
       FutureOps.retryWithRefresh {
-        val res = api.createNamespacedConfigMap(cm.getMetadata.getNamespace, cm, "false")
+        val res = api.createNamespacedConfigMap(cm.getMetadata.getNamespace, cm, false, "false", null)
         logger.debug(s"ConfigMap create complete.")
         res
       }
@@ -60,6 +60,7 @@ class ConfigMapClient(val client: ApiClient)(implicit ec: ExecutionContext) exte
                                            cm.getMetadata.getNamespace,
                                            deleteOption,
                                            "false",
+                                           null,
                                            null,
                                            null,
                                            null,
