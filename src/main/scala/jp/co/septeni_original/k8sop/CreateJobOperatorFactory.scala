@@ -6,8 +6,9 @@ import java.util.concurrent.Executors
 import com.typesafe.scalalogging.LazyLogging
 import io.digdag.spi._
 import io.digdag.util.BaseOperator
-import io.kubernetes.client.{ApiException, Configuration}
-import io.kubernetes.client.models._
+import io.kubernetes.client.openapi.ApiException
+import io.kubernetes.client.openapi.Configuration
+import io.kubernetes.client.openapi.models._
 import io.kubernetes.client.util.authenticators.GCPAuthenticator
 import io.kubernetes.client.util.{Config, KubeConfig, Yaml}
 import jp.co.septeni_original.k8sop.util.{FileReader, FutureOps}

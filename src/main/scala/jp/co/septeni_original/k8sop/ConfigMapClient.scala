@@ -1,12 +1,13 @@
 package jp.co.septeni_original.k8sop
 
-import com.squareup.okhttp.Response
 import com.typesafe.scalalogging.LazyLogging
-import io.kubernetes.client.apis.CoreV1Api
-import io.kubernetes.client.models.{V1ConfigMap, V1DeleteOptions}
+import io.kubernetes.client.openapi.ApiClient
+import io.kubernetes.client.openapi.ApiException
+import io.kubernetes.client.openapi.apis.CoreV1Api
+import io.kubernetes.client.openapi.models.{V1ConfigMap, V1DeleteOptions}
 import io.kubernetes.client.util.Yaml
-import io.kubernetes.client.{ApiClient, ApiException}
 import jp.co.septeni_original.k8sop.util.FutureOps
+import okhttp3.Response
 
 import scala.collection.JavaConverters._
 import scala.concurrent.{ExecutionContext, Future}

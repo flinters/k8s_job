@@ -1,11 +1,12 @@
 package jp.co.septeni_original.k8sop
 
-import com.squareup.okhttp.Response
 import com.typesafe.scalalogging.LazyLogging
-import io.kubernetes.client.apis.BatchV1Api
-import io.kubernetes.client.models.{V1DeleteOptions, V1Job}
-import io.kubernetes.client.{ApiClient, ApiException}
+import io.kubernetes.client.openapi.ApiClient
+import io.kubernetes.client.openapi.ApiException
+import io.kubernetes.client.openapi.apis.BatchV1Api
+import io.kubernetes.client.openapi.models.{V1DeleteOptions, V1Job}
 import jp.co.septeni_original.k8sop.util.FutureOps
+import okhttp3.Response
 
 import scala.concurrent.duration._
 import scala.concurrent.{ExecutionContext, Future}
